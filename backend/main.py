@@ -1,5 +1,5 @@
 """
-main.py - API FastAPI para Dashboard de Otimização de Estoque (EOQ + ROP)
+main.py - API FastAPI para Dashboard de Otimização de Estoque (EOQ)
 Sistema com autenticação JWT e multi-usuário
 """
 
@@ -7,16 +7,12 @@ from fastapi import FastAPI, File, UploadFile, Form, Depends, HTTPException, sta
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
-from typing import List, Optional
+from typing import Optional
 import os
-import io
-import pandas as pd
-import numpy as np
-from scipy.stats import norm
 from dotenv import load_dotenv
 
 from model import User, Calculos, get_db, init_db
-from optimize import optimize_inventory, calculate_safety_stock
+from optimize import optimize_inventory
 from auth import (
     UserCreate, UserLogin, Token, UserResponse, get_current_user_id,
     get_password_hash, verify_password, create_access_token
@@ -26,9 +22,9 @@ load_dotenv()
 
 # Criar aplicação FastAPI
 app = FastAPI(
-    title="Dashboard de Otimização de Estoque - EOQ + ROP",
-    description="Sistema completo de gestão de estoque com EOQ e Reorder Point, multi-usuário com autenticação JWT",
-    version="2.0.0"
+    title="Dashboard Financeiro de Otimização de Estoque - EOQ",
+    description="Sistema de gestão de estoque com EOQ (Economic Order Quantity), análises financeiras e visualizações, multi-usuário com autenticação JWT",
+    version="3.0.0"
 )
 
 # Configurar CORS
@@ -48,7 +44,7 @@ async def startup_event():
     init_db()
     print("✅ Banco de dados inicializado com sucesso!")
     print("🔐 Sistema de autenticação JWT ativado")
-    print("📊 Modelos EOQ + ROP disponíveis")
+    print("📊 Dashboard Financeiro EOQ disponível")
 
 
 # ============= ROTAS PÚBLICAS =============
@@ -57,13 +53,14 @@ async def startup_event():
 async def root():
     """Endpoint raiz - informações da API"""
     return {
-        "message": "Dashboard de Otimização de Estoque - EOQ + ROP",
-        "version": "2.0.0",
+        "message": "Dashboard Financeiro de Otimização de Estoque - EOQ",
+        "version": "3.0.0",
         "features": [
             "Cálculo de Lote Econômico (EOQ)",
-            "Ponto de Reposição (ROP)",
-            "Estoque de Segurança (Safety Stock)",
             "Previsão de Demanda com Machine Learning",
+            "Análise de Custos e Sensibilidade",
+            "Visualizações e Gráficos Financeiros",
+            "KPIs e Métricas de Desempenho",
             "Autenticação JWT",
             "Dashboard Multi-usuário"
         ],
@@ -73,7 +70,7 @@ async def root():
                 "POST /api/auth/login": "Login e obter token JWT"
             },
             "optimization": {
-                "POST /api/optimize": "Calcular EOQ + ROP (requer autenticação)",
+                "POST /api/optimize": "Calcular EOQ (requer autenticação)",
                 "GET /api/history": "Histórico de cálculos do usuário",
                 "GET /api/dashboard": "KPIs e estatísticas do dashboard"
             }
@@ -203,8 +200,6 @@ async def optimize(
     custo_pedido: float = Form(..., gt=0, description="Custo de Pedido (S)"),
     custo_estocagem: float = Form(..., gt=0, description="Custo de Estocagem (H)"),
     historical_demand: UploadFile = File(..., description="CSV com histórico de demanda"),
-    lead_time: Optional[int] = Form(None, ge=1, description="Lead time em dias"),
-    service_level: Optional[float] = Form(0.95, ge=0.5, le=0.99, description="Nível de serviço (0.95 = 95%)"),
     nome_produto: Optional[str] = Form(None, description="Nome do produto/item"),
     current_user_id: int = Depends(get_current_user_id),
     db: Session = Depends(get_db)
@@ -212,15 +207,13 @@ async def optimize(
     """
     Endpoint POST /api/optimize
     
-    Calcula EOQ (lote econômico) e ROP (ponto de reposição)
+    Calcula EOQ (Economic Order Quantity - Lote Econômico de Compra)
     Requer autenticação JWT
     
     Parâmetros:
     - custo_pedido: Custo por pedido (S)
     - custo_estocagem: Custo de estocagem por unidade (H)
     - historical_demand: CSV com colunas 'mes' e 'vendas'
-    - lead_time: Lead time em dias (opcional, para ROP)
-    - service_level: Nível de serviço desejado (padrão: 95%)
     - nome_produto: Nome do produto (opcional)
     """
     try:
@@ -234,13 +227,11 @@ async def optimize(
         # Ler conteúdo do arquivo CSV
         csv_content = await historical_demand.read()
         
-        # Executar otimização (EOQ + ROP)
+        # Executar otimização EOQ
         resultado = optimize_inventory(
             custo_pedido=custo_pedido,
             custo_estocagem=custo_estocagem,
             csv_content=csv_content,
-            lead_time=lead_time,
-            service_level=service_level,
             nome_produto=nome_produto
         )
         
@@ -250,15 +241,15 @@ async def optimize(
             custo_pedido=resultado["custo_pedido"],
             custo_estocagem=resultado["custo_estocagem"],
             demanda_anual=resultado["demanda_anual"],
-            lead_time=resultado.get("lead_time"),
-            service_level=resultado.get("service_level"),
+            lead_time=None,
+            service_level=None,
             quantidade_otima=resultado["quantidade_otima"],
             custo_total_minimo=resultado["custo_total_minimo"],
             numero_pedidos_ano=resultado["numero_pedidos_ano"],
             demanda_diaria=resultado["demanda_diaria"],
             desvio_padrao_demanda=resultado["desvio_padrao_demanda"],
-            safety_stock=resultado.get("safety_stock"),
-            reorder_point=resultado.get("reorder_point"),
+            safety_stock=None,
+            reorder_point=None,
             metodo_previsao=resultado["metodo_previsao"],
             r2_score=resultado["r2_score"],
             derivada_primeira=resultado["derivada_primeira"],
@@ -275,7 +266,7 @@ async def optimize(
         return {
             "success": True,
             "data": novo_calculo.to_dict(),
-            "message": "Otimização calculada com sucesso!"
+            "message": "EOQ calculado com sucesso!"
         }
         
     except ValueError as e:
@@ -287,106 +278,6 @@ async def optimize(
         raise HTTPException(
             status_code=500,
             detail=f"Erro ao processar otimização: {str(e)}"
-        )
-
-
-@app.post("/api/calculate-rop")
-async def calculate_rop_only(
-    historical_demand: UploadFile = File(..., description="CSV com histórico de demanda"),
-    lead_time: int = Form(..., ge=1, le=365, description="Lead time em dias"),
-    service_level: float = Form(0.95, ge=0.5, le=0.999, description="Nível de serviço (0.95 = 95%)"),
-    nome_produto: Optional[str] = Form(None, description="Nome do produto/item"),
-    current_user_id: int = Depends(get_current_user_id),
-    db: Session = Depends(get_db)
-):
-    """
-    Endpoint POST /api/calculate-rop
-    
-    Calcula APENAS o ROP (Reorder Point) e Estoque de Segurança
-    Endpoint separado do EOQ
-    
-    Parâmetros:
-    - historical_demand: CSV com colunas 'mes' e 'vendas'
-    - lead_time: Lead time em dias (obrigatório)
-    - service_level: Nível de serviço desejado (padrão: 95%)
-    - nome_produto: Nome do produto (opcional)
-    """
-    try:
-        # Validar tipo de arquivo
-        if not historical_demand.filename.endswith('.csv'):
-            raise HTTPException(
-                status_code=400,
-                detail="O arquivo deve ser um CSV (.csv)"
-            )
-        
-        # Ler conteúdo do arquivo CSV
-        csv_content = await historical_demand.read()
-        csv_file = io.BytesIO(csv_content)
-        df = pd.read_csv(csv_file)
-        
-        # Validar estrutura do CSV
-        if 'mes' not in df.columns or 'vendas' not in df.columns:
-            raise HTTPException(
-                status_code=400,
-                detail="O CSV deve conter as colunas 'mes' e 'vendas'"
-            )
-        
-        # Calcular demanda anual e desvio padrão
-        demanda_data = df['vendas'].values
-        demanda_anual = float(np.sum(demanda_data))
-        demanda_diaria = demanda_anual / 365
-        
-        # Calcular desvio padrão da demanda (por mês, depois converter para diário)
-        desvio_padrao_mensal = float(np.std(demanda_data, ddof=1))
-        desvio_padrao_diario = desvio_padrao_mensal / np.sqrt(30)  # Aproximação: 30 dias por mês
-        
-        # Calcular Estoque de Segurança e ROP
-        safety_stock_result = calculate_safety_stock(
-            desvio_padrao_diario,
-            lead_time,
-            service_level
-        )
-        
-        rop_result = calculate_rop(
-            demanda_diaria,
-            lead_time,
-            safety_stock_result
-        )
-        
-        # Preparar resposta
-        resultado = {
-            "tipo_calculo": "ROP",
-            "nome_produto": nome_produto,
-            "demanda_anual": demanda_anual,
-            "demanda_diaria": demanda_diaria,
-            "desvio_padrao_demanda": desvio_padrao_diario,
-            "lead_time": lead_time,
-            "service_level": service_level,
-            "safety_stock": safety_stock_result,
-            "reorder_point": rop_result,
-            "z_score": norm.ppf(service_level),
-            "explicacao": {
-                "demanda_durante_lead_time": demanda_diaria * lead_time,
-                "estoque_seguranca": safety_stock_result,
-                "ponto_reposicao": rop_result
-            }
-        }
-        
-        return {
-            "success": True,
-            "data": resultado,
-            "message": "ROP calculado com sucesso!"
-        }
-        
-    except ValueError as e:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Erro de validação: {str(e)}"
-        )
-    except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Erro ao calcular ROP: {str(e)}"
         )
 
 
@@ -566,8 +457,9 @@ if __name__ == "__main__":
     host = os.getenv("API_HOST", "0.0.0.0")
     port = int(os.getenv("API_PORT", "8000"))
     
-    print(f"🚀 Iniciando Dashboard de Otimização de Estoque...")
-    print(f"📊 Modelos disponíveis: EOQ + ROP + Safety Stock")
+    print(f"🚀 Iniciando Dashboard Financeiro de Otimização de Estoque...")
+    print(f"📊 Modelo EOQ (Economic Order Quantity) disponível")
+    print(f"📈 Análises Financeiras e Visualizações")
     print(f"🔐 Autenticação JWT ativada")
     print(f"🌐 Servidor: http://{host}:{port}")
     print(f"📚 Documentação: http://{host}:{port}/docs")

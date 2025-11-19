@@ -33,42 +33,46 @@ const LoginPage = () => {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: '#f3f4f6',
+      background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
       padding: '1rem'
     }}>
       <div style={{
         width: '100%',
-        maxWidth: '420px',
-        backgroundColor: 'white',
-        borderRadius: '16px',
-        boxShadow: 'var(--shadow-lg)',
-        padding: '2.5rem',
-        border: '1px solid #e5e7eb'
+        maxWidth: '460px',
+        backgroundColor: '#1e293b',
+        borderRadius: '20px',
+        boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5)',
+        padding: '3rem',
+        border: '1px solid #334155'
       }}>
         {/* Logo/Header */}
-        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+        <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
           <div style={{
-            width: '70px',
-            height: '70px',
-            backgroundColor: 'var(--primary-color)',
-            borderRadius: '50%',
+            width: '80px',
+            height: '80px',
+            background: 'linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%)',
+            borderRadius: '20px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            margin: '0 auto 1rem',
-            fontSize: '2rem'
+            margin: '0 auto 1.5rem',
+            fontSize: '2.5rem',
+            boxShadow: '0 10px 15px -3px rgba(139, 92, 246, 0.4)'
           }}>
-            📦
+            �
           </div>
           <h1 style={{
-            fontSize: '1.75rem',
+            fontSize: '2rem',
             fontWeight: '700',
-            color: 'var(--text-primary)',
+            background: 'linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text',
             marginBottom: '0.5rem'
           }}>
-            EOQ Dashboard
+            Dashboard EOQ
           </h1>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem' }}>
+          <p style={{ color: '#94a3b8', fontSize: '0.95rem' }}>
             Sistema de Otimização de Estoque
           </p>
         </div>
@@ -76,31 +80,31 @@ const LoginPage = () => {
         {/* Error Alert */}
         {error && (
           <div style={{
-            backgroundColor: '#fee2e2',
-            border: '1px solid #fecaca',
-            borderRadius: '8px',
-            padding: '0.75rem 1rem',
+            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+            border: '1px solid #ef4444',
+            borderRadius: '10px',
+            padding: '1rem',
             marginBottom: '1.5rem',
             display: 'flex',
             alignItems: 'center',
-            gap: '0.5rem',
-            color: '#991b1b'
+            gap: '0.75rem',
+            color: '#fca5a5'
           }}>
-            <FiAlertCircle size={18} />
-            <span style={{ fontSize: '0.875rem' }}>{error}</span>
+            <FiAlertCircle size={20} />
+            <span style={{ fontSize: '0.875rem', lineHeight: '1.5' }}>{error}</span>
           </div>
         )}
 
         {/* Form */}
         <form onSubmit={handleSubmit}>
           {/* Email */}
-          <div style={{ marginBottom: '1.25rem' }}>
+          <div style={{ marginBottom: '1.5rem' }}>
             <label style={{
               display: 'block',
               marginBottom: '0.5rem',
-              fontWeight: '500',
-              color: 'var(--text-primary)',
-              fontSize: '0.9rem'
+              fontWeight: '600',
+              color: '#f1f5f9',
+              fontSize: '0.95rem'
             }}>
               E-mail
             </label>
@@ -110,7 +114,8 @@ const LoginPage = () => {
                 left: '1rem',
                 top: '50%',
                 transform: 'translateY(-50%)',
-                color: 'var(--text-secondary)'
+                color: '#94a3b8',
+                fontSize: '1.1rem'
               }} />
               <input
                 type="email"
@@ -120,27 +125,35 @@ const LoginPage = () => {
                 placeholder="seu@email.com"
                 style={{
                   width: '100%',
-                  padding: '0.75rem 1rem 0.75rem 2.75rem',
-                  border: '2px solid #e5e7eb',
-                  borderRadius: '8px',
+                  padding: '0.875rem 1rem 0.875rem 3rem',
+                  border: '2px solid #334155',
+                  borderRadius: '10px',
                   fontSize: '1rem',
-                  transition: 'all 0.2s',
-                  outline: 'none'
+                  transition: 'all 0.3s',
+                  outline: 'none',
+                  backgroundColor: '#0f172a',
+                  color: '#f1f5f9'
                 }}
-                onFocus={(e) => e.target.style.borderColor = 'var(--primary-color)'}
-                onBlur={(e) => e.target.style.borderColor = '#e5e7eb'}
+                onFocus={(e) => {
+                  e.target.style.borderColor = '#8b5cf6';
+                  e.target.style.boxShadow = '0 0 0 3px rgba(139, 92, 246, 0.1)';
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = '#334155';
+                  e.target.style.boxShadow = 'none';
+                }}
               />
             </div>
           </div>
 
           {/* Password */}
-          <div style={{ marginBottom: '1.5rem' }}>
+          <div style={{ marginBottom: '2rem' }}>
             <label style={{
               display: 'block',
               marginBottom: '0.5rem',
-              fontWeight: '500',
-              color: 'var(--text-primary)',
-              fontSize: '0.9rem'
+              fontWeight: '600',
+              color: '#f1f5f9',
+              fontSize: '0.95rem'
             }}>
               Senha
             </label>
@@ -150,7 +163,8 @@ const LoginPage = () => {
                 left: '1rem',
                 top: '50%',
                 transform: 'translateY(-50%)',
-                color: 'var(--text-secondary)'
+                color: '#94a3b8',
+                fontSize: '1.1rem'
               }} />
               <input
                 type="password"
@@ -160,15 +174,23 @@ const LoginPage = () => {
                 placeholder="••••••••"
                 style={{
                   width: '100%',
-                  padding: '0.75rem 1rem 0.75rem 2.75rem',
-                  border: '2px solid #e5e7eb',
-                  borderRadius: '8px',
+                  padding: '0.875rem 1rem 0.875rem 3rem',
+                  border: '2px solid #334155',
+                  borderRadius: '10px',
                   fontSize: '1rem',
-                  transition: 'all 0.2s',
-                  outline: 'none'
+                  transition: 'all 0.3s',
+                  outline: 'none',
+                  backgroundColor: '#0f172a',
+                  color: '#f1f5f9'
                 }}
-                onFocus={(e) => e.target.style.borderColor = 'var(--primary-color)'}
-                onBlur={(e) => e.target.style.borderColor = '#e5e7eb'}
+                onFocus={(e) => {
+                  e.target.style.borderColor = '#8b5cf6';
+                  e.target.style.boxShadow = '0 0 0 3px rgba(139, 92, 246, 0.1)';
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = '#334155';
+                  e.target.style.boxShadow = 'none';
+                }}
               />
             </div>
           </div>
@@ -179,31 +201,33 @@ const LoginPage = () => {
             disabled={loading}
             style={{
               width: '100%',
-              padding: '0.875rem',
-              backgroundColor: loading ? '#93c5fd' : 'var(--primary-color)',
+              padding: '1rem',
+              background: loading ? 'linear-gradient(135deg, #6d28d9 0%, #a855f7 100%)' : 'linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%)',
               color: 'white',
               border: 'none',
-              borderRadius: '8px',
-              fontSize: '1rem',
-              fontWeight: '600',
+              borderRadius: '12px',
+              fontSize: '1.05rem',
+              fontWeight: '700',
               cursor: loading ? 'not-allowed' : 'pointer',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               gap: '0.5rem',
-              transition: 'all 0.2s',
-              marginBottom: '1rem'
+              transition: 'all 0.3s',
+              marginBottom: '1.5rem',
+              boxShadow: '0 10px 15px -3px rgba(139, 92, 246, 0.3)',
+              opacity: loading ? 0.7 : 1
             }}
-            onMouseOver={(e) => !loading && (e.target.style.backgroundColor = '#1e40af')}
-            onMouseOut={(e) => !loading && (e.target.style.backgroundColor = 'var(--primary-color)')}
+            onMouseOver={(e) => !loading && (e.target.style.transform = 'translateY(-2px)')}
+            onMouseOut={(e) => !loading && (e.target.style.transform = 'translateY(0)')}
           >
             {loading ? (
               <>
                 <div className="spinner-small" style={{
-                  width: '18px',
-                  height: '18px',
-                  border: '2px solid white',
-                  borderTop: '2px solid transparent',
+                  width: '20px',
+                  height: '20px',
+                  border: '3px solid white',
+                  borderTop: '3px solid transparent',
                   borderRadius: '50%',
                   animation: 'spin 0.8s linear infinite'
                 }}></div>
@@ -211,25 +235,28 @@ const LoginPage = () => {
               </>
             ) : (
               <>
-                <FiLogIn />
-                Entrar
+                <FiLogIn size={20} />
+                Entrar no Dashboard
               </>
             )}
           </button>
 
           {/* Register Link */}
           <div style={{ textAlign: 'center' }}>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
+            <p style={{ color: '#94a3b8', fontSize: '0.95rem' }}>
               Não tem uma conta?{' '}
               <Link 
                 to="/register" 
                 style={{ 
-                  color: 'var(--primary-color)', 
+                  color: '#8b5cf6', 
                   fontWeight: '600',
-                  textDecoration: 'none'
+                  textDecoration: 'none',
+                  transition: 'color 0.2s'
                 }}
+                onMouseOver={(e) => e.target.style.color = '#ec4899'}
+                onMouseOut={(e) => e.target.style.color = '#8b5cf6'}
               >
-                Cadastre-se
+                Cadastre-se aqui
               </Link>
             </p>
           </div>

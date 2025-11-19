@@ -134,9 +134,7 @@ function AppContent() {
   const { isAuthenticated } = useAuth();
   
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: 'var(--bg-color)' }}>
-      {isAuthenticated && <Navigation />}
-      
+    <div style={{ minHeight: '100vh' }}>
       <Routes>
         {/* Public Routes */}
         <Route path="/login" element={
@@ -154,9 +152,7 @@ function AppContent() {
         } />
         <Route path="/history" element={
           <ProtectedRoute>
-            <div className="container">
-              <HistoryPage />
-            </div>
+            <HistoryPage />
           </ProtectedRoute>
         } />
         
@@ -165,28 +161,6 @@ function AppContent() {
           <Navigate to={isAuthenticated ? "/dashboard" : "/login"} replace />
         } />
       </Routes>
-
-      {isAuthenticated && (
-        <footer style={{
-          backgroundColor: 'var(--card-bg)',
-          borderTop: '1px solid var(--border-color)',
-          padding: '2rem',
-          marginTop: '4rem',
-          textAlign: 'center'
-        }}>
-          <div className="container">
-            <p style={{ color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
-              Dashboard Financeiro EOQ - Sistema de Otimização de Estoque
-            </p>
-            <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
-              Backend: FastAPI + NeonDB + JWT | Frontend: React + Vite
-            </p>
-            <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginTop: '0.5rem' }}>
-              Modelos: EOQ + ROP (Reorder Point) + Estoque de Segurança
-            </p>
-          </div>
-        </footer>
-      )}
     </div>
   );
 }

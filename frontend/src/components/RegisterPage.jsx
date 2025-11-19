@@ -60,42 +60,46 @@ const RegisterPage = () => {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      backgroundColor: '#f3f4f6',
+      background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
       padding: '1rem'
     }}>
       <div style={{
         width: '100%',
-        maxWidth: '480px',
-        backgroundColor: 'white',
-        borderRadius: '16px',
-        boxShadow: 'var(--shadow-lg)',
-        padding: '2.5rem',
-        border: '1px solid #e5e7eb'
+        maxWidth: '500px',
+        backgroundColor: '#1e293b',
+        borderRadius: '20px',
+        boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5)',
+        padding: '3rem',
+        border: '1px solid #334155'
       }}>
         {/* Logo/Header */}
-        <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+        <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
           <div style={{
-            width: '70px',
-            height: '70px',
-            backgroundColor: 'var(--primary-color)',
-            borderRadius: '50%',
+            width: '80px',
+            height: '80px',
+            background: 'linear-gradient(135deg, #10b981 0%, #3b82f6 100%)',
+            borderRadius: '20px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            margin: '0 auto 1rem',
-            fontSize: '2rem'
+            margin: '0 auto 1.5rem',
+            fontSize: '2.5rem',
+            boxShadow: '0 10px 15px -3px rgba(16, 185, 129, 0.4)'
           }}>
-            📦
+            ✨
           </div>
           <h1 style={{
-            fontSize: '1.75rem',
+            fontSize: '2rem',
             fontWeight: '700',
-            color: 'var(--text-primary)',
+            background: 'linear-gradient(135deg, #10b981 0%, #3b82f6 100%)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text',
             marginBottom: '0.5rem'
           }}>
             Criar Conta
           </h1>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem' }}>
+          <p style={{ color: '#94a3b8', fontSize: '0.95rem' }}>
             Comece a otimizar seu estoque hoje
           </p>
         </div>
@@ -103,18 +107,18 @@ const RegisterPage = () => {
         {/* Error Alert */}
         {error && (
           <div style={{
-            backgroundColor: '#fee2e2',
-            border: '1px solid #fecaca',
-            borderRadius: '8px',
-            padding: '0.75rem 1rem',
+            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+            border: '1px solid #ef4444',
+            borderRadius: '10px',
+            padding: '1rem',
             marginBottom: '1.5rem',
             display: 'flex',
             alignItems: 'center',
-            gap: '0.5rem',
-            color: '#991b1b'
+            gap: '0.75rem',
+            color: '#fca5a5'
           }}>
-            <FiAlertCircle size={18} />
-            <span style={{ fontSize: '0.875rem' }}>{error}</span>
+            <FiAlertCircle size={20} />
+            <span style={{ fontSize: '0.875rem', lineHeight: '1.5' }}>{error}</span>
           </div>
         )}
 

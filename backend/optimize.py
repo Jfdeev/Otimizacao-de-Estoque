@@ -1,6 +1,6 @@
 """
-optimize.py - Lógica de Otimização EOQ + ROP
-Usa pandas, sklearn, statsmodels, seaborn e sympy
+optimize.py - Lógica de Otimização EOQ (Economic Order Quantity)
+Usa pandas, sklearn e sympy para previsão de demanda e otimização
 """
 
 import pandas as pd
@@ -8,8 +8,7 @@ import numpy as np
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import r2_score
 import sympy as sp
-from typing import Dict, Tuple, Optional
-from scipy import stats
+from typing import Dict, Tuple
 import io
 
 
@@ -59,72 +58,6 @@ def forecast_demand(csv_content: bytes) -> Tuple[float, float, str, float, pd.Da
     desvio_padrao = float(np.std(df['vendas'].values))
     
     return demanda_anual, r2, "Linear Regression (sklearn)", desvio_padrao, df
-
-
-def calculate_safety_stock(
-    desvio_padrao_demanda: float,
-    lead_time: int,
-    service_level: float = 0.95
-) -> float:
-    """
-    Calcula o Estoque de Segurança (Safety Stock)
-    
-    Fórmula: SS = Z × σ × √L
-    
-    Onde:
-    - Z = Z-score para o nível de serviço desejado (distribuição normal)
-    - σ = Desvio padrão da demanda (mensal ou diária)
-    - L = Lead time (em mesma unidade de tempo do desvio padrão)
-    
-    Args:
-        desvio_padrao_demanda: Desvio padrão da demanda mensal
-        lead_time: Lead time em dias
-        service_level: Nível de serviço desejado (0.95 = 95%)
-    
-    Returns:
-        Estoque de segurança em unidades
-    """
-    # Obter Z-score para o nível de serviço
-    # Por exemplo: 95% -> Z = 1.65, 99% -> Z = 2.33
-    z_score = stats.norm.ppf(service_level)
-    
-    # Converter desvio padrão mensal para diário (aproximação)
-    # Assumindo 30 dias por mês
-    desvio_padrao_diario = desvio_padrao_demanda / np.sqrt(30)
-    
-    # Calcular estoque de segurança
-    # SS = Z × σ_diária × √lead_time
-    safety_stock = z_score * desvio_padrao_diario * np.sqrt(lead_time)
-    
-    return float(max(0, safety_stock))
-
-
-def calculate_reorder_point(
-    demanda_anual: float,
-    lead_time: int,
-    safety_stock: float
-) -> Tuple[float, float]:
-    """
-    Calcula o Ponto de Reposição (Reorder Point - ROP)
-    
-    Fórmula: ROP = (Demanda Diária × Lead Time) + Estoque de Segurança
-    
-    Args:
-        demanda_anual: Demanda anual prevista
-        lead_time: Lead time em dias
-        safety_stock: Estoque de segurança calculado
-    
-    Returns:
-        Tuple com (reorder_point, demanda_diaria)
-    """
-    # Calcular demanda diária
-    demanda_diaria = demanda_anual / 365
-    
-    # Calcular ponto de reposição
-    # ROP = demanda durante lead time + estoque de segurança
-    reorder_point = (demanda_diaria * lead_time) + safety_stock
-    
-    return float(reorder_point), float(demanda_diaria)
 
 
 def calculate_eoq_sympy(D: float, S: float, H: float) -> Dict[str, float]:
@@ -203,23 +136,19 @@ def optimize_inventory(
     custo_pedido: float,
     custo_estocagem: float,
     csv_content: bytes,
-    lead_time: Optional[int] = None,
-    service_level: Optional[float] = 0.95,
-    nome_produto: Optional[str] = None
+    nome_produto: str = None
 ) -> Dict:
     """
-    Função principal de otimização que integra previsão de demanda, cálculo EOQ e ROP.
+    Função principal de otimização que integra previsão de demanda e cálculo EOQ.
     
     Args:
         custo_pedido: Custo S (custo por pedido)
         custo_estocagem: Custo H (custo de estocagem por unidade)
         csv_content: Conteúdo do arquivo CSV com histórico de demanda
-        lead_time: Lead time em dias (opcional, para cálculo de ROP)
-        service_level: Nível de serviço desejado (0.95 = 95%)
         nome_produto: Nome do produto/item (opcional)
         
     Returns:
-        Dicionário completo com todos os resultados da otimização
+        Dicionário completo com todos os resultados da otimização EOQ
     """
     # 1. Prever demanda anual usando sklearn
     demanda_anual, r2, metodo, desvio_padrao, df = forecast_demand(csv_content)
@@ -227,7 +156,7 @@ def optimize_inventory(
     # 2. Calcular Q* e custo mínimo usando sympy
     resultado_eoq = calculate_eoq_sympy(demanda_anual, custo_pedido, custo_estocagem)
     
-    # 3. Preparar resultado base
+    # 3. Preparar resultado
     resultado = {
         "custo_pedido": custo_pedido,
         "custo_estocagem": custo_estocagem,
@@ -241,35 +170,9 @@ def optimize_inventory(
         "derivada_segunda": resultado_eoq["derivada_segunda"],
         "validacao_minimo": resultado_eoq["segunda_derivada_no_ponto"] > 0,
         "desvio_padrao_demanda": desvio_padrao,
-        "nome_produto": nome_produto
+        "demanda_diaria": demanda_anual / 365,
+        "nome_produto": nome_produto,
+        "dados_historicos": df['vendas'].tolist()  # Para gráficos
     }
-    
-    # 4. Calcular ROP se lead_time foi fornecido
-    if lead_time is not None and lead_time > 0:
-        # Calcular estoque de segurança
-        safety_stock = calculate_safety_stock(desvio_padrao, lead_time, service_level)
-        
-        # Calcular ponto de reposição e demanda diária
-        reorder_point, demanda_diaria = calculate_reorder_point(
-            demanda_anual, lead_time, safety_stock
-        )
-        
-        # Adicionar ao resultado
-        resultado.update({
-            "lead_time": lead_time,
-            "service_level": service_level,
-            "safety_stock": safety_stock,
-            "reorder_point": reorder_point,
-            "demanda_diaria": demanda_diaria
-        })
-    else:
-        # Valores nulos se ROP não foi calculado
-        resultado.update({
-            "lead_time": None,
-            "service_level": None,
-            "safety_stock": None,
-            "reorder_point": None,
-            "demanda_diaria": demanda_anual / 365  # Sempre calcular demanda diária
-        })
     
     return resultado
