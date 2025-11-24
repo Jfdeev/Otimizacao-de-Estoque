@@ -1,8 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { FiClock, FiTrash2, FiRefreshCw } from 'react-icons/fi';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 
 const HistoryPage = () => {
+  const navigate = useNavigate();
+  const { logout } = useAuth();
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -35,11 +39,16 @@ const HistoryPage = () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await axios.get('/api/history');
+      const token = localStorage.getItem('token');
+      const response = await axios.get('http://localhost:8000/api/history', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
       
-      if (response.data.success) {
-        setHistory(response.data.data);
-      }
+      // O backend pode retornar { success: true, data: [...] } ou direto [...]
+      const data = response.data.success ? response.data.data : response.data;
+      setHistory(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error('Erro ao buscar histórico:', err);
       setError('Erro ao carregar histórico. Tente novamente.');
@@ -54,7 +63,12 @@ const HistoryPage = () => {
     }
 
     try {
-      await axios.delete(`/api/history/${id}`);
+      const token = localStorage.getItem('token');
+      await axios.delete(`http://localhost:8000/api/history/${id}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
       // Remover da lista local
       setHistory(prev => prev.filter(item => item.id !== id));
     } catch (err) {
@@ -67,54 +81,118 @@ const HistoryPage = () => {
     fetchHistory();
   }, []);
 
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
   if (loading) {
     return (
-      <div className="card" style={{ textAlign: 'center', padding: '3rem' }}>
-        <div className="loading" style={{ 
-          width: '40px', 
-          height: '40px', 
-          borderWidth: '4px',
-          borderColor: 'var(--primary-color) transparent',
-          margin: '0 auto'
-        }}></div>
-        <p style={{ marginTop: '1rem', color: 'var(--text-secondary)' }}>
-          Carregando histórico...
-        </p>
+      <div className="dashboard-container">
+        <header className="dashboard-header">
+          <div className="header-content">
+            <div>
+              <h1>📊 Dashboard EOQ</h1>
+              <p className="header-subtitle">Sistema de Otimização de Estoque</p>
+            </div>
+            <div className="header-actions">
+              <button onClick={() => navigate('/dashboard')} className="btn-secondary">
+                🏠 Dashboard
+              </button>
+              <button onClick={handleLogout} className="btn-logout">
+                🚪 Sair
+              </button>
+            </div>
+          </div>
+        </header>
+        <div className="dashboard-content">
+          <div className="card" style={{ textAlign: 'center', padding: '3rem' }}>
+            <div className="loading" style={{ 
+              width: '40px', 
+              height: '40px', 
+              borderWidth: '4px',
+              borderColor: 'var(--purple) transparent',
+              margin: '0 auto'
+            }}></div>
+            <p style={{ marginTop: '1rem', color: 'var(--dark-text-secondary)' }}>
+              Carregando histórico...
+            </p>
+          </div>
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="card">
-        <div className="alert alert-error">
-          <strong>Erro:</strong> {error}
-          <button 
-            onClick={fetchHistory} 
-            className="btn btn-primary" 
-            style={{ marginTop: '1rem' }}
-          >
-            <FiRefreshCw /> Tentar Novamente
-          </button>
+      <div className="dashboard-container">
+        <header className="dashboard-header">
+          <div className="header-content">
+            <div>
+              <h1>📊 Dashboard EOQ</h1>
+              <p className="header-subtitle">Sistema de Otimização de Estoque</p>
+            </div>
+            <div className="header-actions">
+              <button onClick={() => navigate('/dashboard')} className="btn-secondary">
+                🏠 Dashboard
+              </button>
+              <button onClick={handleLogout} className="btn-logout">
+                🚪 Sair
+              </button>
+            </div>
+          </div>
+        </header>
+        <div className="dashboard-content">
+          <div className="card">
+            <div className="error-message">
+              <strong>Erro:</strong> {error}
+            </div>
+            <button 
+              onClick={fetchHistory} 
+              className="btn-primary" 
+              style={{ marginTop: '1rem' }}
+            >
+              <FiRefreshCw /> Tentar Novamente
+            </button>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="card">
+    <div className="dashboard-container">
+      <header className="dashboard-header">
+        <div className="header-content">
+          <div>
+            <h1>📊 Dashboard EOQ</h1>
+            <p className="header-subtitle">Sistema de Otimização de Estoque</p>
+          </div>
+          <div className="header-actions">
+            <button onClick={() => navigate('/dashboard')} className="btn-secondary">
+              🏠 Dashboard
+            </button>
+            <button onClick={handleLogout} className="btn-logout">
+              🚪 Sair
+            </button>
+          </div>
+        </div>
+      </header>
+      
+      <div className="dashboard-content">
+        <div className="card">
       <div style={{ 
         display: 'flex', 
         justifyContent: 'space-between', 
         alignItems: 'center',
         marginBottom: '1.5rem' 
       }}>
-        <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+        <h2 className="card-title" style={{ marginBottom: 0 }}>
           <FiClock /> Histórico de Cálculos
         </h2>
         <button 
           onClick={fetchHistory} 
-          className="btn btn-secondary"
+          className="btn-secondary"
           style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
         >
           <FiRefreshCw /> Atualizar
@@ -122,25 +200,18 @@ const HistoryPage = () => {
       </div>
 
       {history.length === 0 ? (
-        <div style={{ 
-          textAlign: 'center', 
-          padding: '3rem',
-          color: 'var(--text-secondary)' 
-        }}>
-          <p style={{ fontSize: '1.25rem', marginBottom: '0.5rem' }}>
-            📊 Nenhum cálculo realizado ainda
-          </p>
-          <p>
-            Os cálculos de otimização que você realizar aparecerão aqui.
-          </p>
+        <div className="empty-state">
+          <div className="empty-state-icon">📊</div>
+          <h3>Nenhum cálculo realizado ainda</h3>
+          <p>Os cálculos de otimização que você realizar aparecerão aqui.</p>
         </div>
       ) : (
         <>
-          <p style={{ marginBottom: '1.5rem', color: 'var(--text-secondary)' }}>
+          <p style={{ marginBottom: '1.5rem', color: 'var(--dark-text-secondary)' }}>
             Total de {history.length} cálculo{history.length !== 1 ? 's' : ''} realizado{history.length !== 1 ? 's' : ''}
           </p>
 
-          <div className="table-container">
+          <div className="history-table">
             <table>
               <thead>
                 <tr>
@@ -162,24 +233,31 @@ const HistoryPage = () => {
                     <td>
                       <span className="badge badge-info">#{item.id}</span>
                     </td>
-                    <td>{formatDate(item.data_calculo)}</td>
-                    <td>{formatCurrency(item.custo_pedido)}</td>
-                    <td>{formatCurrency(item.custo_estocagem)}</td>
-                    <td>{formatNumber(item.demanda_anual)}</td>
-                    <td style={{ fontWeight: '600', color: 'var(--secondary-color)' }}>
-                      {formatNumber(item.quantidade_otima)}
+                    <td>{formatDate(item.data_calculo || item.timestamp)}</td>
+                    <td>{formatCurrency(item.custo_pedido || 0)}</td>
+                    <td>{formatCurrency(item.custo_estocagem || item.custo_armazenagem || 0)}</td>
+                    <td>{formatNumber(item.demanda_anual || 0)}</td>
+                    <td style={{ fontWeight: '600', color: 'var(--green)' }}>
+                      {formatNumber(item.quantidade_otima || item.q_otimo || 0)}
                     </td>
-                    <td style={{ fontWeight: '600', color: 'var(--primary-color)' }}>
-                      {formatCurrency(item.custo_total_minimo)}
+                    <td style={{ fontWeight: '600', color: 'var(--purple)' }}>
+                      {formatCurrency(item.custo_total_minimo || 0)}
                     </td>
                     <td>
-                      <span style={{ fontSize: '0.875rem' }}>
+                      <span style={{ fontSize: '0.875rem', color: 'var(--dark-text-secondary)' }}>
                         {item.metodo_previsao || 'N/A'}
                       </span>
                     </td>
                     <td>
                       {item.r2_score !== null && item.r2_score !== undefined ? (
-                        <span className={item.r2_score > 0.7 ? 'badge badge-success' : 'badge badge-info'}>
+                        <span style={{
+                          padding: '0.25rem 0.5rem',
+                          borderRadius: '4px',
+                          background: item.r2_score > 0.7 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(59, 130, 246, 0.2)',
+                          color: item.r2_score > 0.7 ? 'var(--green)' : 'var(--blue)',
+                          fontSize: '0.875rem',
+                          fontWeight: '600'
+                        }}>
                           {formatNumber(item.r2_score * 100)}%
                         </span>
                       ) : (
@@ -189,11 +267,29 @@ const HistoryPage = () => {
                     <td>
                       <button
                         onClick={() => handleDelete(item.id)}
-                        className="btn btn-danger"
-                        style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}
+                        style={{ 
+                          padding: '0.5rem 0.75rem',
+                          background: 'rgba(239, 68, 68, 0.1)',
+                          border: '1px solid #ef4444',
+                          borderRadius: '8px',
+                          color: '#ef4444',
+                          cursor: 'pointer',
+                          transition: 'all 0.3s',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}
                         title="Deletar cálculo"
+                        onMouseOver={(e) => {
+                          e.currentTarget.style.background = '#ef4444';
+                          e.currentTarget.style.color = 'white';
+                        }}
+                        onMouseOut={(e) => {
+                          e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)';
+                          e.currentTarget.style.color = '#ef4444';
+                        }}
                       >
-                        <FiTrash2 />
+                        <FiTrash2 size={16} />
                       </button>
                     </td>
                   </tr>
@@ -253,6 +349,8 @@ const HistoryPage = () => {
           </div>
         </>
       )}
+        </div>
+      </div>
     </div>
   );
 };

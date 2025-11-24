@@ -1,6 +1,6 @@
 """
-optimize.py - Lógica de Otimização EOQ
-Usa pandas, sklearn, statsmodels, seaborn e sympy
+optimize.py - Lógica de Otimização EOQ (Economic Order Quantity)
+Usa pandas, sklearn e sympy para previsão de demanda e otimização
 """
 
 import pandas as pd
@@ -12,7 +12,7 @@ from typing import Dict, Tuple
 import io
 
 
-def forecast_demand(csv_content: bytes) -> Tuple[float, float, str]:
+def forecast_demand(csv_content: bytes) -> Tuple[float, float, str, float, pd.DataFrame]:
     """
     Lê o CSV de demanda histórica e prevê a demanda anual para os próximos 12 meses
     usando LinearRegression do sklearn.
@@ -21,7 +21,7 @@ def forecast_demand(csv_content: bytes) -> Tuple[float, float, str]:
         csv_content: Conteúdo do arquivo CSV em bytes
         
     Returns:
-        Tuple com (demanda_anual_prevista, r2_score, método_usado)
+        Tuple com (demanda_anual_prevista, r2_score, método_usado, desvio_padrao, df_original)
     """
     # Ler CSV
     df = pd.read_csv(io.BytesIO(csv_content))
@@ -54,7 +54,10 @@ def forecast_demand(csv_content: bytes) -> Tuple[float, float, str]:
     # Demanda anual = soma das previsões dos próximos 12 meses
     demanda_anual = float(np.sum(previsao_12_meses))
     
-    return demanda_anual, r2, "Linear Regression (sklearn)"
+    # Calcular desvio padrão da demanda (usando dados históricos)
+    desvio_padrao = float(np.std(df['vendas'].values))
+    
+    return demanda_anual, r2, "Linear Regression (sklearn)", desvio_padrao, df
 
 
 def calculate_eoq_sympy(D: float, S: float, H: float) -> Dict[str, float]:
@@ -116,9 +119,13 @@ def calculate_eoq_sympy(D: float, S: float, H: float) -> Dict[str, float]:
     # Calcular o custo total mínimo substituindo Q* na função de custo
     custo_minimo = float(CT.subs(Q, Q_star))
     
+    # Calcular número de pedidos por ano
+    numero_pedidos = D / Q_star
+    
     return {
         "Q_otimo": Q_star,
         "custo_minimo": custo_minimo,
+        "numero_pedidos_ano": numero_pedidos,
         "derivada_primeira": str(CT_prime),
         "derivada_segunda": str(CT_double_prime),
         "segunda_derivada_no_ponto": segunda_derivada_no_ponto
@@ -128,7 +135,8 @@ def calculate_eoq_sympy(D: float, S: float, H: float) -> Dict[str, float]:
 def optimize_inventory(
     custo_pedido: float,
     custo_estocagem: float,
-    csv_content: bytes
+    csv_content: bytes,
+    nome_produto: str = None
 ) -> Dict:
     """
     Função principal de otimização que integra previsão de demanda e cálculo EOQ.
@@ -137,26 +145,34 @@ def optimize_inventory(
         custo_pedido: Custo S (custo por pedido)
         custo_estocagem: Custo H (custo de estocagem por unidade)
         csv_content: Conteúdo do arquivo CSV com histórico de demanda
+        nome_produto: Nome do produto/item (opcional)
         
     Returns:
-        Dicionário completo com todos os resultados da otimização
+        Dicionário completo com todos os resultados da otimização EOQ
     """
     # 1. Prever demanda anual usando sklearn
-    demanda_anual, r2, metodo = forecast_demand(csv_content)
+    demanda_anual, r2, metodo, desvio_padrao, df = forecast_demand(csv_content)
     
     # 2. Calcular Q* e custo mínimo usando sympy
     resultado_eoq = calculate_eoq_sympy(demanda_anual, custo_pedido, custo_estocagem)
     
-    # 3. Consolidar resultados
-    return {
+    # 3. Preparar resultado
+    resultado = {
         "custo_pedido": custo_pedido,
         "custo_estocagem": custo_estocagem,
         "demanda_anual": demanda_anual,
         "quantidade_otima": resultado_eoq["Q_otimo"],
         "custo_total_minimo": resultado_eoq["custo_minimo"],
+        "numero_pedidos_ano": resultado_eoq["numero_pedidos_ano"],
         "metodo_previsao": metodo,
         "r2_score": r2,
         "derivada_primeira": resultado_eoq["derivada_primeira"],
         "derivada_segunda": resultado_eoq["derivada_segunda"],
-        "validacao_minimo": resultado_eoq["segunda_derivada_no_ponto"] > 0
+        "validacao_minimo": resultado_eoq["segunda_derivada_no_ponto"] > 0,
+        "desvio_padrao_demanda": desvio_padrao,
+        "demanda_diaria": demanda_anual / 365,
+        "nome_produto": nome_produto,
+        "dados_historicos": df['vendas'].tolist()  # Para gráficos
     }
+    
+    return resultado
