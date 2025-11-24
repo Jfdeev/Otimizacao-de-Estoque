@@ -263,40 +263,6 @@ const DashboardNew = () => {
     };
   };
 
-  // Dados de radar para análise comparativa
-  const getRadarData = () => {
-    if (!results) return [];
-    
-    const maxCost = Math.max(results.custo_pedido, results.custo_armazenagem, results.custo_total_minimo);
-    
-    return [
-      {
-        metric: 'Custo Total',
-        value: (results.custo_total_minimo / maxCost) * 100,
-        fullMark: 100
-      },
-      {
-        metric: 'Custo Pedido',
-        value: (results.custo_pedido / maxCost) * 100,
-        fullMark: 100
-      },
-      {
-        metric: 'Custo Armaz.',
-        value: (results.custo_armazenagem / maxCost) * 100,
-        fullMark: 100
-      },
-      {
-        metric: 'Eficiência',
-        value: Math.min(((results.q_otimo / parseFloat(formData.demand)) * 100), 100),
-        fullMark: 100
-      },
-      {
-        metric: 'Giro Estoque',
-        value: Math.min((parseFloat(formData.demand) / results.q_otimo) * 20, 100),
-        fullMark: 100
-      }
-    ];
-  };
 
   const COLORS = ['#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#3b82f6'];
 
@@ -306,7 +272,7 @@ const DashboardNew = () => {
       <header className="dashboard-header">
         <div className="header-content">
           <div>
-            <h1>📊 Dashboard EOQ</h1>
+            <h1>Dashboard EOQ</h1>
             <p className="header-subtitle">Sistema de Otimização de Estoque</p>
           </div>
           <div className="header-actions">
@@ -546,14 +512,6 @@ const DashboardNew = () => {
                 </div>
               </div>
 
-              <div className="kpi-card kpi-indigo">
-                <div className="kpi-icon">🎯</div>
-                <div className="kpi-content">
-                  <h3>Demanda Anual</h3>
-                  <p className="kpi-value">{Math.round(results.demanda_anual || 0).toLocaleString('pt-BR')}</p>
-                  <span className="kpi-label">unidades/ano</span>
-                </div>
-              </div>
             </div>
 
             {/* Gráficos - Linha 1 */}
@@ -647,22 +605,224 @@ const DashboardNew = () => {
                   </BarChart>
                 </ResponsiveContainer>
               </div>
+            </div>
 
-              {/* Radar de Métricas */}
-              <div className="card chart-card">
-                <h3 className="chart-title">🎯 Análise Multidimensional</h3>
-                <ResponsiveContainer width="100%" height={250}>
-                  <RadarChart data={getRadarData()}>
-                    <PolarGrid stroke="#374151" />
-                    <PolarAngleAxis dataKey="metric" stroke="#9ca3af" />
-                    <PolarRadiusAxis stroke="#9ca3af" />
-                    <Radar name="Performance" dataKey="value" stroke="#8b5cf6" fill="#8b5cf6" fillOpacity={0.6} />
-                    <Tooltip 
-                      contentStyle={{ backgroundColor: '#1f2937', border: '1px solid #374151' }}
-                      formatter={(value) => `${value.toFixed(1)}%`}
-                    />
-                  </RadarChart>
-                </ResponsiveContainer>
+            {/* Interpretação dos Resultados */}
+            <div className="card">
+              <h3 className="card-title">💡 Interpretação dos Resultados</h3>
+              <div style={{ 
+                display: 'grid', 
+                gap: '1.5rem',
+                color: 'var(--dark-text-secondary)',
+                lineHeight: '1.7'
+              }}>
+                <div style={{ 
+                  background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(236, 72, 153, 0.1) 100%)',
+                  padding: '1.5rem',
+                  borderRadius: '12px',
+                  border: '1px solid var(--purple)'
+                }}>
+                  <h4 style={{ color: 'var(--dark-text)', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    📦 Quantidade Ótima de Pedido
+                  </h4>
+                  <p>
+                    Você deve pedir <strong style={{ color: 'var(--purple)' }}>{Math.round(results.quantidade_otima || results.q_otimo)}</strong> unidades 
+                    em cada pedido. Isso equilibra perfeitamente os custos de fazer pedidos frequentes versus manter muito 
+                    estoque parado.
+                  </p>
+                </div>
+
+                <div style={{ 
+                  background: 'rgba(16, 185, 129, 0.1)',
+                  padding: '1.5rem',
+                  borderRadius: '12px',
+                  border: '1px solid var(--green)'
+                }}>
+                  <h4 style={{ color: 'var(--dark-text)', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    🔄 Frequência de Pedidos
+                  </h4>
+                  <p>
+                    Faça <strong style={{ color: 'var(--green)' }}>
+                      {Math.round((results.demanda_anual || 1) / (results.quantidade_otima || results.q_otimo || 1))} pedidos por ano
+                    </strong>, ou seja, aproximadamente 1 pedido a cada{' '}
+                    <strong style={{ color: 'var(--green)' }}>
+                      {Math.round(365 / ((results.demanda_anual || 1) / (results.quantidade_otima || results.q_otimo || 1)))} dias
+                    </strong>.
+                  </p>
+                </div>
+
+                <div style={{ 
+                  background: 'rgba(59, 130, 246, 0.1)',
+                  padding: '1.5rem',
+                  borderRadius: '12px',
+                  border: '1px solid var(--blue)'
+                }}>
+                  <h4 style={{ color: 'var(--dark-text)', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    💰 Economia de Custos
+                  </h4>
+                  <p>
+                    Com esta estratégia, seu custo total anual será de{' '}
+                    <strong style={{ color: 'var(--blue)' }}>
+                      R$ {(results.custo_total_minimo || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    </strong>, minimizando desperdícios e maximizando eficiência.
+                  </p>
+                </div>
+
+                {results.r2_score !== undefined && results.r2_score !== null && (
+                  <div style={{ 
+                    background: 'rgba(245, 158, 11, 0.1)',
+                    padding: '1.5rem',
+                    borderRadius: '12px',
+                    border: '1px solid var(--orange)'
+                  }}>
+                    <h4 style={{ color: 'var(--dark-text)', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      📈 Confiabilidade da Previsão
+                    </h4>
+                    <p>
+                      O modelo de previsão ({results.metodo_previsao}) apresentou uma acurácia de{' '}
+                      <strong style={{ color: 'var(--orange)' }}>
+                        {(results.r2_score * 100).toFixed(2)}%
+                      </strong>. 
+                      {results.r2_score > 0.7 
+                        ? ' Excelente! A previsão é altamente confiável.' 
+                        : ' Considere adicionar mais dados históricos para melhorar a precisão.'}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Como o Cálculo foi Feito */}
+            <div className="card">
+              <h3 className="card-title">🧮 Como o Cálculo Foi Feito</h3>
+              
+              <div style={{ 
+                background: 'var(--dark-bg)',
+                padding: '1.5rem',
+                borderRadius: '12px',
+                border: '1px solid var(--dark-border)',
+                marginBottom: '1.5rem'
+              }}>
+                <h4 style={{ color: 'var(--dark-text)', marginBottom: '1rem' }}>📊 Etapa 1: Análise da Demanda</h4>
+                <p style={{ color: 'var(--dark-text-secondary)', lineHeight: '1.7', marginBottom: '0.75rem' }}>
+                  Analisamos seu histórico de vendas usando <strong style={{ color: 'var(--purple)' }}>algoritmos de Machine Learning</strong> ({results.metodo_previsao || 'Regressão Linear'}) 
+                  para prever a demanda futura com precisão.
+                </p>
+                <div style={{ 
+                  background: 'var(--dark-card)',
+                  padding: '0.75rem 1rem',
+                  borderRadius: '8px',
+                  fontFamily: 'monospace',
+                  fontSize: '0.9rem',
+                  color: 'var(--green)',
+                  marginTop: '0.5rem'
+                }}>
+                  Demanda Prevista (D) = {Math.round(results.demanda_anual || 0).toLocaleString('pt-BR')} unidades/ano
+                </div>
+              </div>
+
+              <div style={{ 
+                background: 'var(--dark-bg)',
+                padding: '1.5rem',
+                borderRadius: '12px',
+                border: '1px solid var(--dark-border)',
+                marginBottom: '1.5rem'
+              }}>
+                <h4 style={{ color: 'var(--dark-text)', marginBottom: '1rem' }}>🧪 Etapa 2: Fórmula do EOQ</h4>
+                <p style={{ color: 'var(--dark-text-secondary)', lineHeight: '1.7', marginBottom: '0.75rem' }}>
+                  Aplicamos a fórmula clássica do <strong style={{ color: 'var(--purple)' }}>Economic Order Quantity (EOQ)</strong>:
+                </p>
+                <div style={{ 
+                  background: 'var(--dark-card)',
+                  padding: '1.5rem',
+                  borderRadius: '8px',
+                  textAlign: 'center',
+                  marginTop: '0.5rem',
+                  marginBottom: '1rem'
+                }}>
+                  <div style={{ fontSize: '1.5rem', color: 'var(--purple)', fontWeight: 'bold', marginBottom: '0.5rem' }}>
+                    Q* = √(2 × D × S / H)
+                  </div>
+                  <div style={{ fontSize: '0.85rem', color: 'var(--dark-text-secondary)', marginTop: '0.75rem' }}>
+                    Onde:<br/>
+                    <strong style={{ color: 'var(--dark-text)' }}>D</strong> = Demanda anual ({Math.round(results.demanda_anual || 0).toLocaleString('pt-BR')} unidades)<br/>
+                    <strong style={{ color: 'var(--dark-text)' }}>S</strong> = Custo por pedido (R$ {(results.custo_pedido || 0).toFixed(2)})<br/>
+                    <strong style={{ color: 'var(--dark-text)' }}>H</strong> = Custo de armazenagem (R$ {((results.custo_armazenagem || results.custo_estocagem || 0)).toFixed(2)}/unidade/ano)
+                  </div>
+                </div>
+                <div style={{ 
+                  background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(236, 72, 153, 0.1) 100%)',
+                  padding: '1rem',
+                  borderRadius: '8px',
+                  border: '1px solid var(--purple)'
+                }}>
+                  <div style={{ fontSize: '1.2rem', color: 'var(--purple)', fontWeight: 'bold', textAlign: 'center' }}>
+                    Q* = {Math.round(results.quantidade_otima || results.q_otimo)} unidades
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ 
+                background: 'var(--dark-bg)',
+                padding: '1.5rem',
+                borderRadius: '12px',
+                border: '1px solid var(--dark-border)'
+              }}>
+                <h4 style={{ color: 'var(--dark-text)', marginBottom: '1rem' }}>⚖️ Etapa 3: Equilíbrio de Custos</h4>
+                <p style={{ color: 'var(--dark-text-secondary)', lineHeight: '1.7', marginBottom: '1rem' }}>
+                  O EOQ encontra o ponto onde os custos se equilibram:
+                </p>
+                <div style={{ 
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                  gap: '1rem'
+                }}>
+                  <div style={{ 
+                    background: 'var(--dark-card)',
+                    padding: '1rem',
+                    borderRadius: '8px',
+                    textAlign: 'center',
+                    border: '1px solid var(--purple)'
+                  }}>
+                    <div style={{ fontSize: '0.875rem', color: 'var(--dark-text-secondary)', marginBottom: '0.5rem' }}>
+                      Custo de Pedidos
+                    </div>
+                    <div style={{ fontSize: '1.25rem', color: 'var(--purple)', fontWeight: 'bold' }}>
+                      R$ {(results.custo_pedido || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    </div>
+                  </div>
+                  <div style={{ 
+                    background: 'var(--dark-card)',
+                    padding: '1rem',
+                    borderRadius: '8px',
+                    textAlign: 'center',
+                    border: '1px solid var(--pink)'
+                  }}>
+                    <div style={{ fontSize: '0.875rem', color: 'var(--dark-text-secondary)', marginBottom: '0.5rem' }}>
+                      Custo de Armazenagem
+                    </div>
+                    <div style={{ fontSize: '1.25rem', color: 'var(--pink)', fontWeight: 'bold' }}>
+                      R$ {((results.custo_armazenagem || results.custo_estocagem || 0)).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    </div>
+                  </div>
+                  <div style={{ 
+                    background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.2) 0%, rgba(236, 72, 153, 0.2) 100%)',
+                    padding: '1rem',
+                    borderRadius: '8px',
+                    textAlign: 'center',
+                    border: '2px solid var(--purple)'
+                  }}>
+                    <div style={{ fontSize: '0.875rem', color: 'var(--dark-text-secondary)', marginBottom: '0.5rem' }}>
+                      <strong>Custo Total Mínimo</strong>
+                    </div>
+                    <div style={{ fontSize: '1.25rem', color: 'var(--purple)', fontWeight: 'bold' }}>
+                      R$ {(results.custo_total_minimo || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    </div>
+                  </div>
+                </div>
+                <p style={{ color: 'var(--dark-text-secondary)', lineHeight: '1.7', marginTop: '1rem', fontSize: '0.9rem', textAlign: 'center', fontStyle: 'italic' }}>
+                  💡 Qualquer quantidade diferente de {Math.round(results.quantidade_otima || results.q_otimo)} unidades resultará em custos maiores!
+                </p>
               </div>
             </div>
 
@@ -723,7 +883,9 @@ const DashboardNew = () => {
                   </div>
                 )}
               </div>
-            </div>            {/* Histórico Recente */}
+            </div>
+
+            {/* Histórico Recente */}
             {historyData.length > 0 && (
               <div className="card">
                 <h3 className="card-title">🕐 Histórico Recente de Otimizações</h3>

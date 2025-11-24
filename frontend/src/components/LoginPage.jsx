@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { FiMail, FiLock, FiLogIn, FiAlertCircle } from 'react-icons/fi';
+import { FiMail, FiLock, FiLogIn, FiAlertCircle, FiBarChart2 } from 'react-icons/fi';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
@@ -59,7 +59,7 @@ const LoginPage = () => {
             fontSize: '2.5rem',
             boxShadow: '0 10px 15px -3px rgba(139, 92, 246, 0.4)'
           }}>
-            �
+            <FiBarChart2 color="white" />
           </div>
           <h1 style={{
             fontSize: '2rem',
