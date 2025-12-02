@@ -1,0 +1,40 @@
+# Arquivos de desenvolvimento
+*.pyc
+__pycache__/
+*.pyo
+*.pyd
+.Python
+
+# Arquivos de exemplo e documentação
+backend/example_*.csv
+*.md
+!README.md
+
+# Notebooks
+EOQ-model/
+
+# Cache
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Arquivos de configuração local
+.env
+.env.local
+.venv
+venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
