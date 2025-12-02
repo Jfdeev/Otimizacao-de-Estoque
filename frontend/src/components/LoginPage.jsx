@@ -70,7 +70,7 @@ const LoginPage = () => {
             backgroundClip: 'text',
             marginBottom: '0.5rem'
           }}>
-            Dashboard EOQ
+            StockOptima
           </h1>
           <p style={{ color: '#94a3b8', fontSize: '0.95rem' }}>
             Sistema de Otimização de Estoque

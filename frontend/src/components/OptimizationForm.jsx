@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { FiUpload, FiDollarSign } from 'react-icons/fi';
+import config from '../config';
 
 const OptimizationForm = ({ onResultReceived }) => {
   const [formData, setFormData] = useState({
@@ -63,7 +64,7 @@ const OptimizationForm = ({ onResultReceived }) => {
       data.append('historical_demand', formData.file);
 
       // Enviar para API
-      const response = await axios.post('http://localhost:8000/api/optimize', data, {
+      const response = await axios.post(`${config.API_URL}/api/optimize`, data, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }

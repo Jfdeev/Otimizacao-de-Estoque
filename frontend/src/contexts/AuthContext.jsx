@@ -1,5 +1,6 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import axios from 'axios';
+import config from '../config';
 
 const AuthContext = createContext(null);
 
@@ -28,7 +29,7 @@ export const AuthProvider = ({ children }) => {
 
   const loadUser = async () => {
     try {
-      const response = await axios.get('http://localhost:8000/api/auth/me');
+      const response = await axios.get(`${config.API_URL}/api/auth/me`);
       setUser(response.data);
     } catch (error) {
       console.error('Erro ao carregar usuário:', error);
@@ -44,7 +45,7 @@ export const AuthProvider = ({ children }) => {
       formData.append('username', email);
       formData.append('password', password);
 
-      const response = await axios.post('http://localhost:8000/api/auth/login', formData);
+      const response = await axios.post(`${config.API_URL}/api/auth/login`, formData);
       const { access_token } = response.data;
       
       localStorage.setItem('token', access_token);
@@ -64,7 +65,7 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (userData) => {
     try {
-      const response = await axios.post('http://localhost:8000/api/auth/register', userData);
+      const response = await axios.post(`${config.API_URL}/api/auth/register`, userData);
       
       // Fazer login automaticamente após registro
       return await login(userData.email, userData.password);

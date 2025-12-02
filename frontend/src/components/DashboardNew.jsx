@@ -7,6 +7,7 @@ import {
   ResponsiveContainer, PieChart, Pie, Cell, RadarChart,
   PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar
 } from 'recharts';
+import config from '../config';
 import '../index.css';
 
 const DashboardNew = () => {
@@ -34,7 +35,7 @@ const DashboardNew = () => {
   const fetchHistory = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:8000/api/history', {
+      const response = await fetch(`${config.API_URL}/api/history`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -99,7 +100,7 @@ const DashboardNew = () => {
       data.append('custo_estocagem', formData.custo_estocagem);
       data.append('historical_demand', formData.file);
 
-      const response = await fetch('http://localhost:8000/api/optimize', {
+      const response = await fetch(`${config.API_URL}/api/optimize`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -272,7 +273,7 @@ const DashboardNew = () => {
       <header className="dashboard-header">
         <div className="header-content">
           <div>
-            <h1>Dashboard EOQ</h1>
+            <h1>StockOptima</h1>
             <p className="header-subtitle">Sistema de Otimização de Estoque</p>
           </div>
           <div className="header-actions">

@@ -2,6 +2,8 @@
 
 Sistema full stack para otimização de logística usando o modelo EOQ (Economic Order Quantity / Lote Econômico de Compra).
 
+**🚀 [Ver Guia de Deploy na Vercel](./DEPLOY.md)**
+
 ## 📋 Visão Geral
 
 Este sistema calcula a quantidade ótima de pedido que minimiza os custos totais de estoque, considerando:

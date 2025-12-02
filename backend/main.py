@@ -29,12 +29,23 @@ app = FastAPI(
 
 # Configurar CORS
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000")
+# Permitir localhost e Vercel
+allowed_origins = [
+    "http://localhost:3000",
+    "http://localhost:5173",
+    FRONTEND_URL
+]
+# Adicionar padrão Vercel automaticamente
+if FRONTEND_URL:
+    allowed_origins.append(FRONTEND_URL)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[FRONTEND_URL, "http://localhost:3000", "http://localhost:5173"],
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    allow_origin_regex=r"https://.*\.vercel\.app$",  # Permitir todos os domínios Vercel
 )
 
 # Inicializar banco de dados ao iniciar a aplicação

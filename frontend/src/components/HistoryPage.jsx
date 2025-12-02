@@ -3,6 +3,7 @@ import axios from 'axios';
 import { FiClock, FiTrash2, FiRefreshCw } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import config from '../config';
 
 const HistoryPage = () => {
   const navigate = useNavigate();
@@ -40,7 +41,7 @@ const HistoryPage = () => {
       setLoading(true);
       setError(null);
       const token = localStorage.getItem('token');
-      const response = await axios.get('http://localhost:8000/api/history', {
+      const response = await axios.get(`${config.API_URL}/api/history`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -64,7 +65,7 @@ const HistoryPage = () => {
 
     try {
       const token = localStorage.getItem('token');
-      await axios.delete(`http://localhost:8000/api/history/${id}`, {
+      await axios.delete(`${config.API_URL}/api/history/${id}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
