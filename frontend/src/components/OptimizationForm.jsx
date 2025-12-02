@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { FiUpload, FiDollarSign } from 'react-icons/fi';
+import config from '../config';
 
 const OptimizationForm = ({ onResultReceived }) => {
   const [formData, setFormData] = useState({
@@ -63,7 +64,7 @@ const OptimizationForm = ({ onResultReceived }) => {
       data.append('historical_demand', formData.file);
 
       // Enviar para API
-      const response = await axios.post('/api/optimize', data, {
+      const response = await axios.post(`${config.API_URL}/api/optimize`, data, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
@@ -151,6 +152,49 @@ const OptimizationForm = ({ onResultReceived }) => {
           <small style={{ color: 'var(--text-secondary)', display: 'block', marginTop: '0.25rem' }}>
             Custo de manter uma unidade em estoque por ano
           </small>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+          <div className="form-group">
+            <label htmlFor="lead_time">
+              🚚 Lead Time (dias)
+            </label>
+            <input
+              type="number"
+              id="lead_time"
+              name="lead_time"
+              value={formData.lead_time}
+              onChange={handleInputChange}
+              placeholder="Ex: 7"
+              min="1"
+              max="365"
+              required
+            />
+            <small style={{ color: 'var(--text-secondary)', display: 'block', marginTop: '0.25rem' }}>
+              Tempo entre pedido e entrega
+            </small>
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="service_level">
+              🎯 Nível de Serviço (%)
+            </label>
+            <input
+              type="number"
+              id="service_level"
+              name="service_level"
+              value={formData.service_level}
+              onChange={handleInputChange}
+              placeholder="Ex: 95"
+              step="0.1"
+              min="50"
+              max="99.9"
+              required
+            />
+            <small style={{ color: 'var(--text-secondary)', display: 'block', marginTop: '0.25rem' }}>
+              Confiabilidade desejada (95% recomendado)
+            </small>
+          </div>
         </div>
 
         <div className="form-group">

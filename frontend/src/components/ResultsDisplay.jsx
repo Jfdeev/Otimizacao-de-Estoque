@@ -116,6 +116,31 @@ const ResultsDisplay = ({ result }) => {
         </div>
       </div>
 
+      {/* Cards de ROP - Ponto de Reposição */}
+      {result.reorder_point && result.safety_stock && (
+        <div className="grid grid-2" style={{ marginBottom: '2rem' }}>
+          <div className="stat-card" style={{ 
+            background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)' 
+          }}>
+            <div className="stat-label">🎯 Ponto de Reposição (ROP)</div>
+            <div className="stat-value">{formatNumber(result.reorder_point)} unidades</div>
+            <p style={{ fontSize: '0.875rem', opacity: 0.9, marginTop: '0.5rem' }}>
+              Quando o estoque atingir este nível, faça um novo pedido
+            </p>
+          </div>
+
+          <div className="stat-card" style={{ 
+            background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)' 
+          }}>
+            <div className="stat-label">🛡️ Estoque de Segurança (SS)</div>
+            <div className="stat-value">{formatNumber(result.safety_stock)} unidades</div>
+            <p style={{ fontSize: '0.875rem', opacity: 0.9, marginTop: '0.5rem' }}>
+              Buffer para proteger contra incertezas (nível de serviço: {result.service_level}%)
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Detalhes da Análise */}
       <div style={{ 
         backgroundColor: 'white', 
@@ -163,6 +188,28 @@ const ResultsDisplay = ({ result }) => {
               {result.metodo_previsao}
             </p>
           </div>
+
+          {result.lead_time && (
+            <div>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
+                Lead Time
+              </p>
+              <p style={{ fontSize: '1.25rem', fontWeight: '600', marginTop: '0.25rem' }}>
+                {result.lead_time} dias
+              </p>
+            </div>
+          )}
+
+          {result.demanda_diaria && (
+            <div>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
+                Demanda Diária Média
+              </p>
+              <p style={{ fontSize: '1.25rem', fontWeight: '600', marginTop: '0.25rem' }}>
+                {formatNumber(result.demanda_diaria)} unidades/dia
+              </p>
+            </div>
+          )}
 
           {result.r2_score !== null && result.r2_score !== undefined && (
             <div>
@@ -428,6 +475,73 @@ const ResultsDisplay = ({ result }) => {
         </div>
       </div>
 
+      {/* Explicação do ROP */}
+      {result.reorder_point && result.safety_stock && (
+        <div style={{ 
+          backgroundColor: '#fef3c7', 
+          borderRadius: '12px', 
+          padding: '1.5rem',
+          marginTop: '1.5rem',
+          borderLeft: '4px solid #f59e0b'
+        }}>
+          <h3 style={{ marginBottom: '1rem', color: '#92400e' }}>
+            🎯 Entendendo o Ponto de Reposição (ROP)
+          </h3>
+          
+          <div style={{ fontSize: '0.95rem', lineHeight: '1.8' }}>
+            <p style={{ marginBottom: '1rem' }}>
+              O <strong>Ponto de Reposição (ROP = {formatNumber(result.reorder_point)} unidades)</strong> indica 
+              o nível de estoque em que você deve fazer um novo pedido para evitar rupturas.
+            </p>
+
+            <h4 style={{ marginTop: '1.5rem', marginBottom: '0.5rem' }}>📐 Cálculo do ROP:</h4>
+            <div style={{ 
+              backgroundColor: 'white', 
+              padding: '1rem', 
+              borderRadius: '8px',
+              fontFamily: 'monospace',
+              textAlign: 'center',
+              marginBottom: '1rem'
+            }}>
+              ROP = (Demanda Diária × Lead Time) + Estoque de Segurança
+            </div>
+
+            <div style={{ 
+              backgroundColor: 'white', 
+              padding: '1rem', 
+              borderRadius: '8px',
+              marginBottom: '1rem'
+            }}>
+              <p style={{ marginBottom: '0.5rem' }}><strong>No seu caso:</strong></p>
+              <ul style={{ marginLeft: '1.5rem', marginBottom: '0' }}>
+                <li>Demanda Diária: {formatNumber(result.demanda_diaria)} unidades/dia</li>
+                <li>Lead Time: {result.lead_time} dias</li>
+                <li>Estoque de Segurança: {formatNumber(result.safety_stock)} unidades</li>
+                {result.desvio_padrao_demanda && (
+                  <li>Desvio Padrão da Demanda: {formatNumber(result.desvio_padrao_demanda)} unidades</li>
+                )}
+              </ul>
+            </div>
+
+            <div style={{ 
+              backgroundColor: '#eff6ff', 
+              padding: '1rem', 
+              borderRadius: '8px'
+            }}>
+              <p style={{ marginBottom: '0.5rem' }}>
+                <strong>💡 Como funciona:</strong>
+              </p>
+              <ol style={{ marginLeft: '1.5rem', lineHeight: '1.6', marginBottom: '0' }}>
+                <li>Quando seu estoque chegar a <strong>{formatNumber(result.reorder_point)} unidades</strong>, faça um pedido de <strong>{formatNumber(result.quantidade_otima)} unidades</strong></li>
+                <li>Durante o lead time de {result.lead_time} dias, você consumirá aproximadamente {formatNumber(result.demanda_diaria * result.lead_time)} unidades</li>
+                <li>O estoque de segurança de {formatNumber(result.safety_stock)} unidades protege contra variações inesperadas na demanda</li>
+                <li>Com nível de serviço de {result.service_level}%, você terá apenas {100 - result.service_level}% de chance de ruptura</li>
+              </ol>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Recomendações Práticas */}
       <div style={{ 
         backgroundColor: '#fefce8', 
@@ -445,10 +559,20 @@ const ResultsDisplay = ({ result }) => {
             <strong>Faça pedidos de {formatNumber(result.quantidade_otima)} unidades</strong> para 
             minimizar custos
           </li>
+          {result.reorder_point && (
+            <li style={{ marginBottom: '0.5rem' }}>
+              <strong>Monitore seu estoque e faça novo pedido quando atingir {formatNumber(result.reorder_point)} unidades</strong> (Ponto de Reposição)
+            </li>
+          )}
           <li style={{ marginBottom: '0.5rem' }}>
             Com a demanda anual de {formatNumber(result.demanda_anual)} unidades, você precisará 
             fazer aproximadamente <strong>{formatNumber(result.demanda_anual / result.quantidade_otima)} pedidos por ano</strong>
           </li>
+          {result.safety_stock && (
+            <li style={{ marginBottom: '0.5rem' }}>
+              Mantenha sempre um <strong>estoque de segurança de {formatNumber(result.safety_stock)} unidades</strong> para evitar rupturas
+            </li>
+          )}
           <li style={{ marginBottom: '0.5rem' }}>
             Revise estes cálculos periodicamente, especialmente se houver mudanças significativas 
             na demanda ou nos custos
